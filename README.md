@@ -3,7 +3,6 @@ datacamp code excercises
 
 ## courses  
 
-- [x] intro_to_python.ipynb  
-- [x] intermediate_python.ipynb  
-- [ ] intro_to_package_building.Rmd  
- 
+- [x] Intro_to_python.ipynb  
+- [x] Intermediate_python.ipynb  
+- [ ] Intro_to_package_building.Rmd  
