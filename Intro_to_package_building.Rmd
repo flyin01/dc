@@ -1,5 +1,5 @@
 ---
-title: "intro_to_package_building"
+title: "Intro_to_package_building"
 output: html_notebook
 ---
 
