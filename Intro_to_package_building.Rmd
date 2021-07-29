@@ -2,21 +2,180 @@
 title: "Intro_to_package_building"
 output: html_notebook
 ---
-
-## Introduction to package building ##  
   
-* The R Package Structure  
-* Documenting Packages  
-* Checking and Building R-packages  
-* Adding Unit Tests to R-packages  
+### Chapters  
   
-## The R Package Structure ##  
+1. The R Package Structure  
+2. Documenting Packages  
+3. Checking and Building R-packages  
+4. Adding Unit Tests to R-packages  
+  
+### 1. The R Package Structure  
     
 In this chapter, we will learn the basics of creating an R package. We will learn about the structure of R packages, set up a package, and write a function and include it in your package. We will also learn about the metadata stored in the DESCRIPTION and NAMESPACE files.  
-
+  
+**The structure of an R package**  
+  
+An R package can include:  
+  
+* Functions  
+* Data  
+* Documentation  
+* Vignettes  
+* Tests  
+  
+You don´t need all this.  
+  
+**Mandatory components**  
+  
+As a minimum our packages must include:  
+  
+* R directory - where you put the R code  
+* man directory - where you store your documentation  
+* NAMESPACE file - contains info about functions that the package imports from other packages and functions that the package makes available to its users  
+* DESCRIPTION file - contains metadata about the package, author, purpose, current version, dependencies    
+  
+**Pacckages for easy creation of packages!**  
+  
+We dont need to do all this for hand, we will use packages that are designed for package building.  
+  
+* `devtools` , helps us stick to the right package structure  
+* `roxygen2` , makes it simple to create docs in man directory and manage NAMESPACE file  
+  
+What we need to do our self is to write the functions we want and update the information in the template description file.  
+  
+**Setting up an R package**  
+  
+We will use the `devtools` package alot to maintain the structure of the package but also to write tests. The aim of `devtools` is to make development as easy as possible for package developers. Core devtools functions:  
+  
+* `create()`  
+* `document()`  
+* `check()`  
+* `build()`  
+* `test()`  
+  
+**create()**  
+  
+The `create()` function will create the basic structure, generating a NAMESPACE file, DESCRIPTION FILE and the R directory. It does not create the man directory yet, that happens later. To use `create()` you need to tell where to create the package and what name it should have. In below example we will create a packages called `simutils` in a new folder in the current work directory. The name of the folder we provide becomes the name of the package.
 
 ```{r}
-getwd()
+# set work directory for where to create the new package, run in console!
 ```
 
-TBD...
+Note: Avoid names already taken on **`CRAN`**    
+```{r}
+# Do not run
+library(devtools)
+create("simutils")
+```
+Running above `create("simutils")` will launch a new RStudio instance and create a new folder in the work directory:  
+  
+`/simutils` , a new folder  
+  
+In this folder **the following objects are** created:  
+  
+* /R , folder  
+* .gitignore  
+* .Rbuildignore  
+* DESCRIPTION  
+* NAMESPACE  
+* simutils.Rproj  
+  
+Practice!  
+  
+**The structure of an R package**  
+  
+You can use `devtools` to create the basic structure of an R package by using the `create()` function.
+
+There are some optional arguments to this function but the main one that you will use is the path argument. You use this to specify where your package will be created and the name that your package will take.
+
+If you want to create the package in your current working directory, as you often will, you just need to supply the name for the package. When naming your package remember to think about:
+  
+* If the name is already taken by another package.  
+* Whether the name makes it clear what the package does.  
+  
+Instructions:  
+* Use the `create()` function to create a new R package called `datasummary`.  
+* Use the `dir()` function to see what files and directories are created in your package.  
+```{r}
+# DO NOT RUN IF THE FOLDER datasummary ALREADY EXISTS!
+library(devtools)
+
+# Use the create function to set up your first package
+create("datasummary")
+
+# Take a look at the files and folders in your package
+dir("datasummary")
+```
+Now let's take a look at the contents of your package in more detail
+  
+**Contents of an R package**  
+  
+When you create an R package there are a number of files and folders that it can contain. This can include folders to store data, user guides (known as vignettes), tests (more on these later in the course) and demos among others. As a minimum there are only two directories that must be included along with two additional files -- the `DESCRIPTION` and the `NAMESPACE`.
+
+Of the two compulsory directories one contains all of the user guides for your functions. As you will see later in the course this is created in a special way for you. The other is included by the `create()` function. Which of the following is the second compulsory directory?  
+  
+Possible Answers:  
+A. data  
+B. tests  
+C. inst  
+D. R  
+Correct: D  
+That's right - all the code for your package goes in the R directory!  
+    
+**Writing a simple function**  
+  
+Whilst there are packages that contain only data, typically packages are created to collect together functions for performing a specific task.  
+  
+For our package you are going to keep the functions simple. You are going to create a package that produces custom summary output for your data.  
+  
+Instructions:  
+* Write a function, `numeric_summary()`, that takes two arguments, a vector `x` and the logical `na.rm`.  
+* Include a check to your function so it fails with an error message if the vector `x` is not numeric.  
+* The function should return a `data.frame` containing the minimum, median, standard deviation and maximum values.  
+* Check that your function works using the `Ozone` column of the `airquality` data and removing missing values.  
+  
+```{r}
+# Create numeric_summary() function
+numeric_summary <- function(x, na.rm = TRUE) {
+
+    # Include an error if x is not numeric
+    if(!is.numeric(x)){
+        stop("Data must be numeric")
+    }
+    
+    # Create data frame
+    data.frame( min = min(x, na.rm = na.rm),
+                median = median(x, na.rm = na.rm),
+                sd = sd(x, na.rm = na.rm),
+                max = max(x, na.rm = na.rm))
+}
+
+# Test numeric_summary() function
+numeric_summary(airquality$Ozone, na.rm = TRUE)
+```
+Now let's look at how you include your function in a package.  
+  
+**Including functions in a package**  
+  
+Once you have written your function code you need to save it in the `R` directory of your package. Typically you can do that by saving an R script in the usual manner (i.e. "Save As").
+
+In the instance that you already have objects created, as you did in the last exercise, that you want to write to the R directory you can do this programmatically. You can use the function `dump()` to send a named R function to a particular file. The two arguments that you need to pass to this function are the name of the R object, as a character string, and the path to the file that you want to create, including the extension `.R`.  
+  
+Instructions:  
+* Use the `dir()` function again to see what is currently available in the `R` directory of `datasummary`.  
+* Using the `dump()` function, write the `numeric_summary()` function to the R directory, saving the file as `numeric_summary.R`.  
+* Print the contents of the `R` directory again.  
+```{r}
+# What is in the R directory before adding a function?
+dir("datasummary/R")
+
+# Use the dump() function to write the numeric_summary function
+dump("numeric_summary", file = "datasummary/R/numeric_summary.R")
+
+# Verify that the file is in the correct directory
+dir("datasummary/R")
+```
+The function has now been saved correctly!  
+
+
