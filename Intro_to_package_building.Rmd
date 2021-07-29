@@ -178,4 +178,6 @@ dir("datasummary/R")
 ```
 The function has now been saved correctly!  
 
+JATKA TÄSTÄ  
 
+https://campus.datacamp.com/courses/developing-r-packages/the-r-package-structure?ex=6
