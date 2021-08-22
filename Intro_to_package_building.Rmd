@@ -35,7 +35,7 @@ As a minimum our packages must include:
 * NAMESPACE file - contains info about functions that the package imports from other packages and functions that the package makes available to its users  
 * DESCRIPTION file - contains metadata about the package, author, purpose, current version, dependencies    
   
-**Pacckages for easy creation of packages!**  
+**Packages for easy creation of packages!**  
   
 We dont need to do all this for hand, we will use packages that are designed for package building.  
   
@@ -407,7 +407,7 @@ Let´s look at some components in details.
   
 Practise!  
   
-**A simple funciton header**  
+**A simple function header**  
   
 The `roxygen` headers are included in the same script as the function code. You use roxygen comments `#'` to identify a line as part of the roxygen header. You can include regular R comments in the header if you wish, using the usual comment character, `#`.
 
@@ -450,5 +450,516 @@ Now let's look at how to document function arguments.
   
 **Documenting function arguments**  
   
+One of the most important aspects of a function to document are the arguments.  
+  
+With roxygen you do this with the `@param` tag. You follow the tag with the argument name and then any details the user needs to know.  
+  
+If there is a lot of information that you need to provide about an argument you might want to consider putting this in the details section instead.  
+  
+Normally you must document every argument of your function, but noe just document the first argument and come back to the second one later!  
+  
+Instructions:  
+  
+* Add an appropriate tag to document the first argument of the ´numeric_summary()` funciton.  
+* Add the following details to this tag: "a numeric vector containing the values to summarize".  
+```{r}
+#' Numeric Summaries
+#'
+#' Summarises numeric data and returns a data frame containing the minimum value, median, standard deviation, and maximum value.
+#'
+# Add appropriate tag and details to document the first argument
+#'@param x a numeric vector containing the values to summarize.
+
+numeric_summary <- function(x, na.rm){
+
+    if(!is.numeric(x)){
+        stop("data must be numeric")
+    }
+    
+    data.frame( min = min(x, na.rm = na.rm),
+                median = median(x, na.rm = na.rm),
+                sd = sd(x, na.rm = na.rm),
+                max = max(x, na.rm = na.rm))
+}
+```
+It's important to document your parameters so others (or your future self!) can see how to use your functions.  
+  
+**Importing other packages**  
+  
+If you wish to use functions from other packages, you should import them in your `roxygen` header. You can use `@import` to import an entire package, or `@importFrom` to import a single function. To show you how `@importFrom` works, we have imported the `gather()` function from the `tidyr` package for you (although it's not needed in this case).  
+  
+Instructions:  
+  
+* Update the `data_summary()` function to import packages purrr and dplyr.
+```{r}
+#' Summary of Numeric Columns
+#'
+#' Generate specific summaries of numeric columns in a data frame
+#' 
+#' @param x A data frame. Non-numeric columns will be removed
+#' @param na.rm A logical indicating whether missing values should be removed
+
+#' @import purrr
+#' @import dplyr 
+#' @importFrom tidyr gather
+data_summary <- function(x, na.rm = TRUE){
+  
+  num_data <- select_if(x, .predicate = is.numeric) 
+  
+  map_df(num_data, .f = numeric_summary, na.rm = na.rm, .id = "ID")
+  
+}
+```
+Now that you've looked at importing functions, let's now take a look at exporting them.  
+  
+**How to export functions**  
+  
+Video.  
+*Exported functions* (can be loaded by the end-user)  
+* visible to the end user
+* key package functionality  
+  
+*Non-exported functions* (functions we dont want end-user using directly)  
+* not visible to end user
+* utility functions  
+  
+When documenting using `roxygen` the exported functions are automatically listed in the NAMESPACE file.  
+  
+Examples of exported and non-exported functions.  
+  
+Below is no `@export` tag so it is a utility function and not exported, is used by other functions in the package but not a function we want end-user to access:
+```{r}
+#' Cound NAs in a vector
+#' 
+#' @param x A vector
+#' 
+#' @return Number of NAs in x
+#' 
+#' @examples
+#'  sumNa(airquality$Ozone)
+sum_na <- function(x) {
+  sum(is.na(x))
+}
+```
+
+Another example is exported, it has an `@export` tag, and it is available for the end-user:
+```{r}
+#' Cound NAs in a data set
+#' 
+#' @param data A data frame or matrix
+#' 
+#' @return Number of NAs in x
+#'
+#' @import purr
+#'
+#' @return Vector of NA counts
+#' @export
+#'
+#' @examples
+#' na_counter(airquality)
+na_counter <- function(data) {
+  
+  stopifnot(is.matrix(data) | is.data.frame(data))
+  
+  if(is.matrix(data)) {
+    data = as.data.frame(data)
+  }
+  purrr::map_int(data. sum_na)
+  }
+```
+Now let´s look at how we refer to these functions.  
+Imaging the `simutils` packages has been built and loaded.
+```{r}
+# Do not run
+library(simutils)
+na_counter(airquality) # this would work, since it is exported
+
+sum_na(airquality$Ozone) # this would give an error, cannot be found, not exported!
+```
+Only the exported at loaded!
+
+Calling non-exported functions is possible. Need to use `package_name:::` three colons.
+```{r}
+# Do not run
+simutils:::sum_na(airquality$Ozone) # This should work since using three colons :::
+```
+  
+How to use roxygen headers to export functions.  
+```{r}
+#'
+#' @export # Use this tag to export it, if we dont want to export it then remove this tag
+#'
+```
+Export best practice  
+  
+Exporting a function makes it available for the end users of your package. Functions that are not exported are not directly available to your end users. It's a really useful way to hide low level functions that you write to break up the main functionality. We want to export high level functions for calculating all summaries of supplied data in our example above. Not utility functions.  
+  
+**Exporting functions**  
+  
+Although the NAMESPACE file is used to identify functions that are exported you use roxygen tags to create this file. This makes it really easy to see, right next to the function, if your users will be able to work with it or not.  
+  
+Instructions:  
+* Add an export tag to the `data_summary()` function.
+```{r}
+#' Summary of Numeric Columns
+#'
+#' Generate specific summaries of numeric columns in a data frame
+#' 
+#' @param x A data frame. Non-numeric columns will be removed
+#' @param na.rm A logical indicating whether missing values should be removed
+#' @import dplyr
+#' @import purrr
+#' @importFrom tidyr gather
+#' @export
+data_summary <- function(x, na.rm = TRUE){
+  
+  num_data <- select_if(x, .predicate = is.numeric) 
+  
+  map_df(num_data, .f = numeric_summary, na.rm = na.rm, .id = "ID")
+  
+}
+```
+Only functions we want the end user to have direct access to should be exported. Now let's look at the other things we can document.  
+  
+**Documenting other elements**  
+  
+Video.  
+Documenting examples, we can do this to demonstrate how to use our function. We should provide at least one example for any function that is exported and for any functions that have complicated arguments. An example should not produce an error and there are some requirements on CRAN about examples. Check these out before submitting. This is how to add an example in the roxygen header:  
+```{r}
+#'
+#' @examples 
+#' sample_from_data(airqualiity, size=10)
+```
+Example are automatically run during the package checking stage (talk about this later). In some cases we want to add an example but without the example being run. You can do this:
+```{r}
+#'
+#' @examples
+#' \dontrun{
+#' sample_from_data(airqualiity, size=10)
+#' }
+```
+We can use the `\dontrun` markup tag for this. This is applicable e.g if the function relies on an API-key or being connected to a database. 
+  
+We an use the `@return` tag to describe to the user what to expect from the user if it is data, graphics of any other output:
+```{r}
+#'
+#' @param size Numeric. Number of rows to return.
+#'
+#' @return A data set of the same type as input with \code{size} rows.
+#'
+#' @examples
+#' sample_from_data(airqualiity, size=10)
+#' }
+```
+We used a sentence to desribe returned output and the markup tag `\code{size}` to indicate that we are using one of the parameters.  
+  
+Additional documentation.  
+```{r}
+#'
+#' @author John Doe
+#'
+```
+`@authoer` tag to write who wrote the package.  
+`@notes` tag to add some info if the funciton is experimental or likely to change.  
+  
+**Adding examples**  
+  
+Adding examples
+Examples are the way that your end users will learn how to work with your code. You should provide at least one example for any function that is exported. If there are any tricky arguments to your function you might also want to consider examples for those.
+
+Examples should ideally be easily reproducible and should not cause an error. If you are going to publish your package to CRAN then examples should also run in a reasonable time, CRAN sets this to around 15 minutes but it's worth double checking the recommendations at the time of submission.
+
+You add examples using the `@examples` tag. Examples will typically span multiple lines. This is fine as `roxygen` will assume that everything is part of the examples until it finds another tag.  
+  
+Instructions:  
+* Add an examples tag to the `data_summary()` function header.
+* Add an example of running the function using the `iris` data.
+* Add a second example of running the function with the `airquality` data, not removing missing values.
+```{r}
+#' Data Summary for Numeric Columns
+#'
+#' Custom summaries of numeric data in a provided data frame
+#'
+#' @param x A data.frame containing at least one numeric column
+#' @param na.rm A logical indicating whether missing values should be removed
+#' @import dplyr
+#' @import purrr
+#' @importFrom tidyr gather
+#' @export
+#'
+#' @examples 
+#' data_summary(iris)
+#' data_summary(airquality, na.rm=FALSE)
+data_summary <- function(x, na.rm = TRUE){
+  
+  num_data <- select_if(x, .predicate = is.numeric) 
+  
+  map_df(num_data, .f = numeric_summary, na.rm = na.rm, .id = "ID")
+  
+}
+```
+Examples can really help users understand your function.  
+  
+**Documenting function return values**  
+  
+You document the return value of a function using the tag `@return`. This is where you can tell users what they can expect to get from the function, be that data, a graphic or any other output.
+
+When you write documentation you may want to format the text to look like code, link to other functions or, particularly for return objects, format as a bulleted list. You can do this using special formatting:  
+  
+* For code you use `\code{text to format}`
+* To link to other functions you use `\link[packageName]{functionName}`, although note the package name is only required if the function is not in your package
+* To include an unordered list you use `\itemize{}`. Inside the brackets you mark new items with `\item` followed by the item text.  
+  
+Instructions:  
+* Document the return value with the following description: "This function returns a data.frame including columns:". Format the word `data.frame` as code.
+* Add 5 bullets for each of the 5 column names in the order they are returned (the function is loaded if you want to run it).
+```{r}
+#' Data Summary for Numeric Columns
+#'
+#' Custom summaries of numeric data in a provided data frame
+#'
+#' @param x A data.frame containing at least one numeric column
+#' @param na.rm A logical indicating whether missing values should be removed
+#' @import dplyr
+#' @import purrr
+#' @importFrom tidyr gather
+#' @export
+#' @examples
+#' data_summary(iris)
+#' data_summary(airquality, na.rm = FALSE)
+#'
+## Update the details for the return value
+#' @return This function returns a \code{data.frame} including columns:
+#' \itemize{
+#'  \item ID
+#'  \item min
+#'  \item median
+#'  \item sd
+#'  \item sd
+#'  \item max
+#' }
+#'
+#' @export
+data_summary <- function(x, na.rm = TRUE){
+  
+  num_data <- dplyr::select_if(x, .predicate = is.numeric) 
+  
+  purrr::map_df(num_data, .f = numeric_summary, na.rm = na.rm, .id = "ID")
+  
+}
+
+data_summary(iris)
+```
+Next we're going to look at additional documentation.  
+  
+**Additional documentation**  
+  
+Beyond the functions arguments and return values there are many additional items that can be provided in function help files. From who wrote that function to other functions that you might be interested in using. We will also see later how we can identify dependencies using the `roxygen` header.  
+  
+Other tags that we can use include:  
+  
+* `@author` to identify who wrote the function.  
+* `@seealso` to list other functions that may be of interest to users.
+* `@notes` to add any other notes relating to the function (e.g. if its experimental, likely to change etc.)  
+  
+Instructions:  
+* Add in the author of the `data_summary()` function as `"My Name <myemail@example.com>"`.
+* List the `summary()` function (from the `base` package) after adding the author.
+```{r}
+#' Summary of Numeric Columns
+#' Generate specific summaries of numeric columns in a data frame
+#'
+#' @param x A data frame. Non-numeric columns will be removed
+#' @param na.rm A logical indicating whether missing values should be removed
+#' @import dplyr
+#' @import purrr
+#' @importFrom tidyr gather
+#' @export
+#' @examples
+#' data_summary(iris)
+#' data_summary(airquality, na.rm = FALSE)
+#' 
+#' @return This function returns a \code{data.frame} including columns: 
+#' \itemize{
+#'  \item ID
+#'  \item min
+#'  \item median
+#'  \item sd
+#'  \item max
+#' }
+#'
+## Add in the author of the `data_summary()` function
+#' @author "My Name <myemail@example.com>"
+## List the `summary()` function (from the `base` package)
+#' @seealso \link[base]{summary}
+data_summary <- function(x, na.rm = TRUE){
+  
+  num_data <- dplyr::select_if(x, .predicate = is.numeric) 
+  
+  purrr::map_df(num_data, .f = numeric_summary, na.rm = na.rm, .id = "ID")
+  
+}
+```
+You don't have to document the return value, although it can be useful to the user to do so. Now that you know how to document the functions in a package, let's look at how to document the package itself.  
+  
+**Documenting a package**  
+  
+Video. 
+We have documented functions using `roxygen` headers, now we will look at how to document other components of our package. We can also generate the package level documentaiton using `roxygen2`.  
+  
+*Package level documentation*  
+  
+We need to add tag `@docType` and `@name`. The header it self needs to be followed by `"_PACKAGE"` key word because all headers need to be followed by some `r`code. It is good practice to create a separate r-script which takes the package name that contains this header. This is how it might look in the simutils package:
+```{r}
+#' simutils: A package for performing common simulation task
+#'
+#' This package provides functionality for a variet of simulation tasks,
+#' and plotting tools for viewing the results.
+#'
+#' @author John Doe \email{john.doe@blablabla.com}
+#' @docType package
+#' @name simutils
+"_PACKAGE"
+
+```  
+We save this file as a `simutils.R` file in the `R` directory.
+  
+**Minimum level of documentation**  
+  
+For each function, document:  
+* Title
+* Description
+* Arguments
+* Exported (for exported functions only)  
+  
+You can also document other things that are going to be usefull to the end user of our package.  
+  
+*Documenting data objects*  
+Data that we want any user to see can be included in the data directory. `use_data` function in `devtools` will help us compress the data and to handle the structure of the package properly. Below we take a data frame `sim_dat` and compress it and put it into the data directory all with just a single function call.
+```{r}
+# DO NOT RUN
+use_data(sim_dat, pkg = "simutils")
+```
+  
+Need to have some documentation for our added data sets. We can also do this using `roxygen2` using `@format`and `@source`. Here is an example.
+```{r}
+#' sim_data data set
+#'
+#' We made some data for the package
+#'
+#' @format A data.frame with 3 columns
+#' \describe{
+#' \item{ID}{ID value}
+#' \item{Value}{Measured value in pounds}
+#' \item{Apples}{Logical. Do they like apples}
+#' }
+#' @source Simulated Data
+#'
+"sim_dat"
+
+```  
+  
+*Creating man files*  
+  
+Once we have created function headers and the package help files we can create the `.rd` files for the package, which go into the `man` directory, using the `document()` function in `devtools`.
+```{r}
+# DO NOT RUN
+document("simutils")
+```
+This will create or updating all of the `.rd` files as well as the `NAMESPACE`file.  
+  
+**Adding package documentation**  
+  
+In addition to the individual functions you can also document the whole package.  
+  
+When you document a package you can use all of the same tags as for functions but the problem that you have is that there is no R code to document. Instead you put the keyword "_PACKAGE" underneath your package header.  
+  
+You should also use the @docType and @name tags to indicate that this is package level documentation, and specify your package name.
+
+You should then save the package documentation in the R directory in a file ending with .R with the same name as the package.  
+  
+Instrucitons:  
+* Write a package header for your `datasummary` package with the title "Custom Data Summaries".
+* Include the description "Easily generate custom data frame summaries".
+* Add the relevant tags required for package level documentation.
+* Ensure that the `"_PACKAGE"` keyword is added in the appropriate location.
+```{r}
+#' datasummary: Custom Data Summaries
+#'
+#' Easily generate custom data frame summaries
+#'
+#' @docType package
+#' @name datasummary
+"_PACKAGE"
+```
+  
+**Documenting data objects**  
+  
+If you include a data set in your package you must also provide documentation for it. As with package level documentation, you should include a title and description.  
+  
+With a data set, once again, there is no function object to document. You instead give the name of the dataset as a character string, for instance `"airquality"`. Additionally there are two tags that you need to use:
+
+* `@format` to describe the format of the data. This is often used with the describe format.
+* `@source` to identify where the data came from.  
+You should then save the package documentation in the R directory with a suitable name (in the above case, either `airquality.R` or `data.R`).  
+  
+The `weather` dataset is available in your workspace. Run `print(weather)` to view it.
+  
+Instructions:  
+* Update the `@format` tag to include the correct number of rows and columns in `weather`.
+* Add descriptions of all columns in the `weather` dataset that you added to your package in the last chapter.
+* Add a `@source` tag to and describe the data as "Randomly generated data".
+```{r}
+#' Random Weather Data
+#'
+#' A dataset containing randomly generated weather data.
+#'
+#' @format A data frame of 7 rows and 3 columns
+#' \describe{
+#'  \item{Day}{Numeric values giving day of the week, 1 = Monday, 7 = Sunday}
+#'  \item{Temp}{Numeric values giving temperature in degrees Celsius}
+#'  \item{Weather}{Character values describing the weather on that day}
+#' }
+#' @source Randomly generated data
+"weather"
+```
+Now you've created your documentation, the next step is to build it.  
+  
+**Creating man files**  
+  
+Once you've created your documentation using `roxygen` headers, you need to build your documentation. You can use the `document()` function from the `devtools` package to generate your documentation, supplying the path to the package as the first argument. The generated documentation will appear in the `man` directory. Once you've documented your package, you can view the help files just like you can with any of your existing packages.    
+Instructions:  
+* Generate documentation for your package.
+* Look at the contents of the `man` directory.
+* View the documentation for the `data_summary()` function.
+* View the documentation for the `weather` dataset.
+```{r}
+# OMA: Will generate error, since have not dumped the data into the data folder, this should contain weather.rda, and might be missing something else in some other folder.
+
+# Also in dc this was printed: We are overriding the actual `help()` function in this exercise so you can view the documentation. You don't have to do this on your local system.
+
+
+# Generate package documentation
+document("datasummary")
+
+# Examine the contents of the man directory
+dir("datasummary/man")
+
+# View the documentation for the data_summary function
+help("data_summary")
+
+# View the documentation for the weather dataset
+help("weather")
+```
+Now your package is fully documented, it's time to run some final checks before building it.  
+  
+  
+### 3. Checking and Building R-packages  
+  
+**Why check an R package?**  
+  
+Video.
+
+    
 JATKA TÄSTÄ  
-https://campus.datacamp.com/courses/developing-r-packages/documenting-packages?ex=3
+https://campus.datacamp.com/courses/developing-r-packages/checking-and-building-r-packages?ex=1
