@@ -5,7 +5,7 @@ datacamp code excercises
 
 - [x] `Intro_to_python.ipynb`  
 - [x] `Intermediate_python.ipynb`  
-- [ ] `data_manipulation_w_pandas.ipynb`  
+- [x] `data_manipulation_w_pandas.ipynb`  
 - [ ] `Intro_to_package_building.Rmd`  
 
 ## folders  
