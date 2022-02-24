@@ -8,6 +8,7 @@ datacamp code excercises
 - [x] `data_manipulation_w_pandas.ipynb`  
 - [ ] `OOP_in_python.ipynb`  
 - [ ] `Intro_to_package_building.Rmd`  
+- [ ] `time_series_analysis.ipynb`  
 
 ## folders  
 - `/datasummary` contains objects created in `Intro_to_package_building.Rmd`  
